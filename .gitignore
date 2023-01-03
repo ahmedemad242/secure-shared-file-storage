@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# FTP server temp files
+temp/
+
+# VSCode
+.vscode/
