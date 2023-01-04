@@ -12,13 +12,13 @@ class FtpClientPresenter:
     FTP Client Presenter
     """
 
-    def connectServer(self, event: Union[tk.EventType, None] = None) -> None:
+    def connect(self, event: Union[tk.EventType, None] = None) -> None:
         pass
 
-    def loginServer(self, event: Union[tk.EventType, None] = None) -> None:
+    def login(self, event: Union[tk.EventType, None] = None) -> None:
         pass
 
-    def displayDir(self, event: Union[tk.EventType, None] = None) -> None:
+    def displayDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         pass
 
     def changeDirectory(self, event: Union[tk.EventType, None] = None) -> None:

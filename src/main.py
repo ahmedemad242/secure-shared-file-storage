@@ -9,9 +9,8 @@ def main() -> None:
     """
     Main function of the application.
     """
-    view = FtpClientGui()
     presenter = FtpClientPresenter()
-    view.initGUi(presenter)
+    view = FtpClientGui(presenter)
     view.mainloop()
 
 
