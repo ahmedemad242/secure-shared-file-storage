@@ -3,7 +3,7 @@ FTP Client GUI
 """
 # pylint: disable=C0116
 
-from typing import Protocol, Union, List
+from typing import Protocol, Union, List, Dict
 
 import tkinter as tk
 import customtkinter as ctk  # pylint: disable=import-error
@@ -11,37 +11,37 @@ import customtkinter as ctk  # pylint: disable=import-error
 
 class FtpClientPresenter(Protocol):
     """
-    FTP Client Presenter
+    FTP Client Presenter protocol
     """
 
-    def connect(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleConnect(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def login(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleLogin(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def displayDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleDisplayDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def changeDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleChangeDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def createDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleCreateDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def deleteDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleDeleteDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def downloadFile(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleDownloadFile(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def uploadFile(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleUploadFile(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def deleteFile(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleDeleteFile(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
-    def closeConnection(self, event: Union[tk.EventType, None] = None) -> None:
+    def handleDisconnect(self, event: Union[tk.EventType, None] = None) -> None:
         ...
 
 
@@ -55,181 +55,284 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         self.title("FTP Client")
         self.geometry(f"{1100}x{600}")
 
-        # configure grid layout (4x4)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
-        # create sidebar frame with widgets
-        self.sideBarFrame = ctk.CTkFrame(self, width=140, corner_radius=0)
-        self.sideBarFrame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sideBarFrame.grid_rowconfigure(4, weight=1)
-        self.nameLabel = ctk.CTkLabel(
-            self.sideBarFrame,
+        self.entryWidgets: Dict[str, ctk.CTkEntry] = {}
+        self.responseWidgets: Dict[str, ctk.CTkTextbox] = {}
+
+        self.buildGUI(presenter)
+
+    def buildGUI(self, presenter: FtpClientPresenter) -> None:
+        """
+        Build the GUI
+        """
+        self.buildSidebar()
+        self.buildResponseSection()
+        self.buildControlSection(presenter)
+        self.buildConnectSection(presenter)
+        self.buildLoginSection(presenter)
+
+    def buildSidebar(self) -> None:
+        """
+        Build the sidebar frame with widgets
+        The sidebar contain the name of the application and the appearance mode option menu
+        """
+        sideBarFrame = ctk.CTkFrame(self, width=140, corner_radius=0)
+        sideBarFrame.grid(row=0, column=0, rowspan=4, sticky="nsew")
+        sideBarFrame.grid_rowconfigure(4, weight=1)
+        nameLabel = ctk.CTkLabel(
+            sideBarFrame,
             text="Secure FTP\nClient",
             font=ctk.CTkFont(size=20, weight="bold"),
         )
-        self.nameLabel.grid(row=0, column=0, padx=20, pady=(20, 10))
-        self.appearanceModeLabel = ctk.CTkLabel(
-            self.sideBarFrame, text="Appearance Mode:", anchor="w"
-        )
-        self.appearanceModeLabel.grid(row=5, column=0, padx=20, pady=(10, 0))
-        self.appearanceModeOptioneMenu = ctk.CTkOptionMenu(
-            self.sideBarFrame,
+        nameLabel.grid(row=0, column=0, padx=20, pady=(20, 10))
+        appearanceModeLabel = ctk.CTkLabel(sideBarFrame, text="Appearance Mode:", anchor="w")
+        appearanceModeLabel.grid(row=5, column=0, padx=20, pady=(10, 0))
+        appearanceModeOptioneMenu = ctk.CTkOptionMenu(
+            sideBarFrame,
             values=["Light", "Dark", "System"],
             command=self.changeAppearanceModeEvent,
         )
-        self.appearanceModeOptioneMenu.grid(row=6, column=0, padx=20, pady=(10, 30))
+        appearanceModeOptioneMenu.grid(row=6, column=0, padx=20, pady=(10, 30))
 
-        # create server response, and directory list textboxes
-        self.textBoxFrame = ctk.CTkFrame(self, fg_color="transparent")
-        self.textBoxFrame.grid(row=0, column=1, columnspan=2, sticky="nsew")
-        self.textBoxFrame.grid_columnconfigure((0, 1), weight=1)
-        self.textBoxFrame.grid_rowconfigure(1, weight=1)
+        appearanceModeOptioneMenu.set("Dark")
 
-        self.serverResponseLabel = ctk.CTkLabel(self.textBoxFrame, text="Server Response")
-        self.serverResponseLabel.grid(row=0, column=0, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        self.serverResponseTextbox = ctk.CTkTextbox(self.textBoxFrame, width=250)
-        self.serverResponseTextbox.grid(row=1, column=0, padx=(20, 0), pady=(20, 0), sticky="nsew")
+    def buildResponseSection(self) -> None:
+        """
+        Build the response section frame with widgets
+        The response section contain the server response and the directory list text boxes
+        """
+        textBoxFrame = ctk.CTkFrame(self, fg_color="transparent")
+        textBoxFrame.grid(row=0, column=1, columnspan=2, sticky="nsew")
+        textBoxFrame.grid_columnconfigure((0, 1), weight=1)
+        textBoxFrame.grid_rowconfigure(1, weight=1)
 
-        self.directoryListLabel = ctk.CTkLabel(self.textBoxFrame, text="Directory list")
-        self.directoryListLabel.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        self.directoryListTextbox = ctk.CTkTextbox(self.textBoxFrame, width=100)
-        self.directoryListTextbox.grid(row=1, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        serverResponseLabel = ctk.CTkLabel(textBoxFrame, text="Server Response")
+        serverResponseLabel.grid(row=0, column=0, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        serverResponseTextbox = ctk.CTkTextbox(textBoxFrame, width=250)
+        serverResponseTextbox.grid(row=1, column=0, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        serverResponseTextbox.configure(state="disabled")
+        self.responseWidgets["serverResponseTextbox"] = serverResponseTextbox
 
-        # create connect frame
-        self.connectFrame = ctk.CTkFrame(self)
-        self.connectFrame.grid(row=0, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
+        directoryListLabel = ctk.CTkLabel(textBoxFrame, text="Directory list")
+        directoryListLabel.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        directoryListTextbox = ctk.CTkTextbox(textBoxFrame, width=100)
+        directoryListTextbox.grid(row=1, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        directoryListTextbox.configure(state="disabled")
+        self.responseWidgets["directoryListTextbox"] = directoryListTextbox
 
-        self.connectLabel = ctk.CTkLabel(master=self.connectFrame, text="Enter Connection Details")
-        self.connectLabel.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="n")
+    def buildConnectSection(self, presenter: FtpClientPresenter) -> None:
+        """
+        Build the connect section frame with widgets
+        The connect section contain the connection details entry widgets
+        for ip and port, and the connect button
 
-        self.ipEntry = ctk.CTkEntry(master=self.connectFrame, placeholder_text="IP address")
-        self.ipEntry.grid(row=1, column=2, padx=5, pady=5, sticky="n")
+        parameters
+        ----------
+        presenter: FtpClientPresenter
+            The presenter for the ftp client
+        """
+        connectFrame = ctk.CTkFrame(self)
+        connectFrame.grid(row=0, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
 
-        self.portEntry = ctk.CTkEntry(master=self.connectFrame, placeholder_text="Port number")
-        self.portEntry.grid(row=2, column=2, padx=5, pady=10, sticky="n")
+        connectLabel = ctk.CTkLabel(master=connectFrame, text="Enter Connection Details")
+        connectLabel.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="n")
 
-        self.connectButton = ctk.CTkButton(
-            self.connectFrame, command=presenter.connect, text="Connect"
+        ipEntry = ctk.CTkEntry(master=connectFrame, placeholder_text="IP address")
+        ipEntry.grid(row=1, column=2, padx=5, pady=5, sticky="n")
+        self.entryWidgets["ipEntry"] = ipEntry
+
+        portEntry = ctk.CTkEntry(master=connectFrame, placeholder_text="Port number")
+        portEntry.grid(row=2, column=2, padx=5, pady=10, sticky="n")
+        self.entryWidgets["portEntry"] = portEntry
+
+        connectButton = ctk.CTkButton(connectFrame, command=presenter.handleConnect, text="Connect")
+        connectButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+
+    def buildLoginSection(self, presenter: FtpClientPresenter) -> None:
+        """
+        Build the login section frame with widgets
+        The login section contain the login details entry widgets
+        for username and password, and the login button
+
+        parameters
+        ----------
+        presenter: FtpClientPresenter
+            The presenter for the ftp client
+        """
+        loginFrame = ctk.CTkFrame(self)
+        loginFrame.grid(row=1, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
+
+        loginLabel = ctk.CTkLabel(master=loginFrame, text="Enter Login Information")
+        loginLabel.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="n")
+
+        usernameEntry = ctk.CTkEntry(master=loginFrame, placeholder_text="Username")
+        usernameEntry.grid(row=1, column=2, padx=5, pady=5, sticky="n")
+        self.entryWidgets["usernameEntry"] = usernameEntry
+
+        passwordEntry = ctk.CTkEntry(master=loginFrame, placeholder_text="Password")
+        passwordEntry.grid(row=2, column=2, padx=5, pady=10, sticky="n")
+        self.entryWidgets["passwordEntry"] = passwordEntry
+
+        loginButton = ctk.CTkButton(loginFrame, command=presenter.handleLogin, text="Login")
+        loginButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+
+        loginButton.configure(state="disabled")
+
+    def buildControlSection(self, presenter: FtpClientPresenter) -> None:
+        """
+        Build the control section frame with widgets
+        The control section contain the main entry widget for
+        file/directory name, and the contol buttons
+
+        parameters
+        ----------
+        presenter: FtpClientPresenter
+            The presenter for the ftp client
+        """
+        controlFrame = ctk.CTkFrame(self, fg_color="transparent")
+        controlFrame.grid(row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        controlFrame.grid_columnconfigure((0, 1, 2), weight=1)
+        controlFrame.grid_rowconfigure(4, weight=1)
+
+        mainEntry = ctk.CTkEntry(controlFrame, placeholder_text="Enter File/Directory name")
+        mainEntry.grid(row=0, column=0, columnspan=3, padx=(20, 0), pady=(20, 20), sticky="nsew")
+        self.entryWidgets["mainEntry"] = mainEntry
+
+        changeDirectoryButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleChangeDirectory, text="Change Directory"
         )
-        self.connectButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+        changeDirectoryButton.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 
-        # create login frame
-        self.loginFrame = ctk.CTkFrame(self)
-        self.loginFrame.grid(row=1, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
-
-        self.loginLabel = ctk.CTkLabel(master=self.loginFrame, text="Enter Login Information")
-        self.loginLabel.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="n")
-
-        self.usernameEntry = ctk.CTkEntry(master=self.loginFrame, placeholder_text="Username")
-        self.usernameEntry.grid(row=1, column=2, padx=5, pady=5, sticky="n")
-
-        self.passwordEntry = ctk.CTkEntry(master=self.loginFrame, placeholder_text="Password")
-        self.passwordEntry.grid(row=2, column=2, padx=5, pady=10, sticky="n")
-
-        self.loginButton = ctk.CTkButton(self.loginFrame, command=presenter.login, text="Login")
-        self.loginButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
-
-        # create control frame
-
-        self.controlFrame = ctk.CTkFrame(self, fg_color="transparent")
-        self.controlFrame.grid(
-            row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew"
+        createDirectoryButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleCreateDirectory, text="Create Directory"
         )
-        self.controlFrame.grid_columnconfigure((0, 1, 2), weight=1)
-        self.controlFrame.grid_rowconfigure(4, weight=1)
+        createDirectoryButton.grid(row=1, column=1, padx=20, pady=10, sticky="nsew")
 
-        self.mainEntry = ctk.CTkEntry(
-            self.controlFrame, placeholder_text="Enter File/Directory name"
+        deleteDirectoryButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleDeleteDirectory, text="Delete Directory"
         )
-        self.mainEntry.grid(
-            row=0, column=0, columnspan=3, padx=(20, 0), pady=(20, 20), sticky="nsew"
-        )
+        deleteDirectoryButton.grid(row=1, column=2, padx=20, pady=10, sticky="nsew")
 
-        self.changeDirectoryButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Change Directory"
+        downloadFileButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleDownloadFile, text="Download File"
         )
-        self.changeDirectoryButton.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
+        downloadFileButton.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
 
-        self.createDirectoryButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Create Directory"
+        uploadFileButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleUploadFile, text="Upload File"
         )
-        self.createDirectoryButton.grid(row=1, column=1, padx=20, pady=10, sticky="nsew")
+        uploadFileButton.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
 
-        self.deleteDirectoryButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Delete Directory"
+        deleteFileButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleDeleteFile, text="Delete File"
         )
-        self.deleteDirectoryButton.grid(row=1, column=2, padx=20, pady=10, sticky="nsew")
+        deleteFileButton.grid(row=2, column=2, padx=20, pady=10, sticky="nsew")
 
-        self.downloadFileButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Download File"
+        disconnectButton = ctk.CTkButton(
+            controlFrame, command=presenter.handleDisconnect, text="Disconnect"
         )
-        self.downloadFileButton.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
-
-        self.uploadFileButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Upload File"
-        )
-        self.uploadFileButton.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
-
-        self.deleteFileButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Delete File"
-        )
-        self.deleteFileButton.grid(row=2, column=2, padx=20, pady=10, sticky="nsew")
-
-        self.disconnectButton = ctk.CTkButton(
-            self.controlFrame, command=presenter.changeDirectory, text="Disconnect"
-        )
-        self.disconnectButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
-
-        # set default values
-        self.serverResponseTextbox.insert(
-            "0.0",
-            "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, \
-            sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam \
-            erat, sed diam voluptua.\n\n"
-            * 20,
-        )
-        self.directoryListTextbox.insert(
-            "0.0",
-            "README.mds\nLICENSE\n",
-        )
-        self.loginButton.configure(state="disabled")
-        self.serverResponseTextbox.configure(state="disabled")
-        self.directoryListTextbox.configure(state="disabled")
-        self.appearanceModeOptioneMenu.set("Dark")
+        disconnectButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
 
     def changeAppearanceModeEvent(self, appearanceMode: str) -> None:
+        """
+        Change the appearance mode of the application
+
+        parameters
+        ----------
+        appearanceMode: str
+            The appearance mode to change to (Dark/Light/System)
+        """
         ctk.set_appearance_mode(appearanceMode)
 
     @property
     def mainInput(self) -> str:
-        return self.mainEntry.get()  # type: ignore
+        """
+        Get the input from the main entry widget
+
+        returns
+        -------
+        str
+            The main input
+        """
+        return self.entryWidgets["mainEntry"].get()  # type: ignore
 
     @property
     def ipAddress(self) -> str:
-        return self.ipEntry.get()  # type: ignore
+        """
+        Get the input from the ip address entry widget
+
+        returns
+        -------
+        str
+            The ip address input
+        """
+        return self.entryWidgets["ipEntry"].get()  # type: ignore
 
     @property
     def portNumber(self) -> str:
-        return self.portEntry.get()  # type: ignore
+        """
+        Get the input from the port number entry widget
+
+        returns
+        -------
+        str
+            The port number input
+        """
+        return self.entryWidgets["portEntry"].get()  # type: ignore
 
     @property
     def username(self) -> str:
-        return self.usernameEntry.get()  # type: ignore
+        """
+        Get the input from the username entry widget
+
+        returns
+        -------
+        str
+            The username input
+        """
+        return self.entryWidgets["usernameEntry"].get()  # type: ignore
 
     @property
     def ipAddrpasswordess(self) -> str:
-        return self.passwordEntry.get()  # type: ignore
+        """
+        Get the input from the password entry widget
+
+        returns
+        -------
+        str
+            The password input
+        """
+        return self.entryWidgets["passwordEntry"].get()  # type: ignore
 
     def updateServerResponse(self, response: str) -> None:
+        """
+        Update the server response textbox with the response
+        The
+
+        parameters
+        ----------
+        response: str
+            The response to update the textbox with
+        """
         self.serverResponseTextbox.configure(state="normal")
         self.serverResponseTextbox.insert("end", response)
         self.serverResponseTextbox.configure(state="disabled")
 
-    def updateDirectoryResponse(self, dirlist: List[str]) -> None:
+    def updateDirectoryResponse(self, fileList: List[str]) -> None:
+        """
+        Update the directory response textbox with the directory list
+        The text is replaced with the response
+
+        parameters
+        ----------
+        fileList: List[str]
+            The list of directories/files to update the textbox with
+        """
         self.directoryListTextbox.configure(state="normal")
         self.directoryListTextbox.delete(1.0, "end")
-        for item in dirlist:
-            self.directoryListTextbox.insert(0, item)
+        for file in fileList:
+            self.directoryListTextbox.insert(0, file)
         self.directoryListTextbox.configure(state="disabled")
