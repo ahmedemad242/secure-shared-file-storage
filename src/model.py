@@ -2,6 +2,7 @@
 This module connects to the FTP server and responsible for all operation on it.
 """
 import ftplib
+import os
 from typing import List
 
 
@@ -184,6 +185,7 @@ class FTPConnectionModel:
                     "RETR " + fileName, downloadedFile.write
                 )
         except ftplib.error_perm as exp:
+            os.remove(fileName)
             raise FTPError(exp) from exp
 
     def uploadFile(self, fileName: str) -> str:
