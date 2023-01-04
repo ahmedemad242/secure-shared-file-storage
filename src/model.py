@@ -2,6 +2,13 @@
 This module connects to the FTP server and responsible for all operation on it.
 """
 import ftplib
+from typing import List
+
+
+class FTPError(Exception):
+    """
+    Unable to connect to the server exception.
+    """
 
 
 class UnableToConnect(Exception):
@@ -16,12 +23,6 @@ class NotAuthorized(Exception):
     """
 
 
-class FTPInvalidCommand(Exception):
-    """
-    Unable to connect to the server exception.
-    """
-
-
 class FTPConnectionModel:
     """
     FTP Connection class is useed to connect to the FTP server.
@@ -31,7 +32,7 @@ class FTPConnectionModel:
     def __init__(self) -> None:
         self.ftp = ftplib.FTP()
 
-    def connectServer(self, ipAddress: str, port: int) -> str:
+    def connect(self, ipAddress: str, port: int) -> str:
         """
         Connect to the FTP server.
 
@@ -49,9 +50,9 @@ class FTPConnectionModel:
 
         try:
             return self.ftp.connect(ipAddress, port)
-        except UnableToConnect as exc:
-            print(exc)
-            return "Unable to connect to the server"
+        except OSError as exp:
+            errMsg = f"Unable to connect to {ipAddress}:{port}"
+            raise UnableToConnect(errMsg) from exp
 
     def login(self, username: str, password: str) -> str:
         """
@@ -71,9 +72,21 @@ class FTPConnectionModel:
 
         try:
             return self.ftp.login(username, password)
-        except NotAuthorized as exc:
-            print(exc)
-            return "Unable to connect to the server"
+        except ftplib.error_perm as exp:
+            errMsg = f"Unable to login with {username}:{password}"
+            raise NotAuthorized(errMsg) from exp
+
+    def displayDirectory(self) -> List[str]:
+        """
+        Display the directory on the FTP client.
+
+        Returns
+        -------
+        List[str]
+            list of files in the directory
+        """
+
+        return self.ftp.nlst()
 
     def changeDirectory(self, directoryName: str) -> str:
         """
@@ -91,9 +104,8 @@ class FTPConnectionModel:
 
         try:
             return self.ftp.cwd(directoryName)
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to change directory"
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
 
     def deleteDirectory(self, directoryName: str) -> str:
         """
@@ -111,9 +123,8 @@ class FTPConnectionModel:
 
         try:
             return self.ftp.rmd(directoryName)
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to delete directory"
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
 
     def createDirectory(self, directoryName: str) -> str:
         """
@@ -131,9 +142,8 @@ class FTPConnectionModel:
 
         try:
             return self.ftp.mkd(directoryName)
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to create directory"
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
 
     def deleteFile(self, fileName: str) -> str:
         """
@@ -150,10 +160,9 @@ class FTPConnectionModel:
         """
 
         try:
-            return self.ftp.mkd(fileName)
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to fileName file"
+            return self.ftp.delete(fileName)
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
 
     def downloadFile(self, fileName: str) -> str:
         """
@@ -174,9 +183,8 @@ class FTPConnectionModel:
                 return f"Downloading {fileName}...\n" + self.ftp.retrbinary(
                     "RETR " + fileName, downloadedFile.write
                 )
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to download file"
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
 
     def uploadFile(self, fileName: str) -> str:
         """
@@ -197,9 +205,8 @@ class FTPConnectionModel:
                 return f"Uploading {fileName}...\n" + self.ftp.storbinary(
                     "STOR " + fileName, uploadFile
                 )
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to upload file"
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
 
     def disconnect(self) -> str:
         """
@@ -213,6 +220,5 @@ class FTPConnectionModel:
 
         try:
             return "Closing connection...\n" + self.ftp.quit()
-        except FTPInvalidCommand as exc:
-            print(exc)
-            return "Unable to close connection"
+        except ftplib.error_perm as exp:
+            raise FTPError(exp) from exp
