@@ -1,46 +1,257 @@
 """
 FTP Client Presenter
 """
-# pylint: disable=C0116
-from typing import Union
-
+from __future__ import annotations
+from typing import Union, Protocol, List
 import tkinter as tk
 
+from .model import FTPConnectionModel, UnableToConnect, NotAuthorized, FTPError
 
-class FtpClientPresenter:
+
+class FTPClientGui(Protocol):
+    """
+    View Protocol
+    """
+
+    # pylint: disable=C0116
+
+    def buildGUI(self, presenter: FTPClientPresenter) -> None:
+        ...
+
+    @property
+    def mainInput(self) -> str:
+        ...
+
+    @property
+    def ipAddress(self) -> str:
+        ...
+
+    @property
+    def portNumber(self) -> str:
+        ...
+
+    @property
+    def username(self) -> str:
+        ...
+
+    @property
+    def password(self) -> str:
+        ...
+
+    def updateServerResponse(self, response: str) -> None:
+        ...
+
+    def updateDirectoryResponse(self, fileList: List[str]) -> None:
+        ...
+
+    def toggleLoginButton(self, state: str) -> None:
+        ...
+
+    def mainloop(self) -> None:
+        ...
+
+
+class FTPClientPresenter:
     """
     FTP Client Presenter
     """
 
-    def connect(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+    # pylint: disable=W0613
 
-    def login(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+    def __init__(self, model: FTPConnectionModel, view: FTPClientGui) -> None:
+        self.model = model
+        self.view = view
 
-    def displayDirectory(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+    def handleConnect(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the connect button being pressed.
 
-    def changeDirectory(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+        try:
+            msg = self.model.connect(
+                self.view.ipAddress,
+                int(self.view.portNumber),
+            )
+            self.view.updateServerResponse(msg)
+            self.view.toggleLoginButton("normal")
 
-    def createDirectory(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+        except UnableToConnect as exp:
+            self.view.updateServerResponse(str(exp))
 
-    def deleteDirectory(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+        self.view.updateServerResponse("\n")
 
-    def downloadFile(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+    def handleLogin(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the login button being pressed.
 
-    def uploadFile(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+        try:
+            msg = self.model.login(
+                self.view.username,
+                self.view.password,
+            )
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except NotAuthorized as exp:
+            self.view.updateServerResponse(str(exp))
 
-    def deleteFile(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+        self.view.updateServerResponse("\n")
 
-    def closeConnection(self, event: Union[tk.EventType, None] = None) -> None:
-        pass
+    def handleChangeDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the change directory button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+        try:
+            msg = self.model.changeDirectory(self.view.mainInput)
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def handleCreateDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the create directory button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+        try:
+            msg = self.model.createDirectory(self.view.mainInput)
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def handleDeleteDirectory(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the delete directory button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+
+        try:
+            msg = self.model.deleteDirectory(self.view.mainInput)
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def handleDownloadFile(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the download file button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+
+        try:
+            msg = self.model.downloadFile(self.view.mainInput)
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def handleUploadFile(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the upload file button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+
+        try:
+            msg = self.model.uploadFile(self.view.mainInput)
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def handleDeleteFile(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the delete file button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+
+        try:
+            msg = self.model.deleteFile(self.view.mainInput)
+            self.view.updateServerResponse(msg)
+            self._displayDirectory()
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def handleDisconnect(self, event: Union[tk.EventType, None] = None) -> None:
+        """
+        Handle the disconnect button being pressed.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+
+        try:
+            msg = self.model.disconnect()
+            self.view.updateServerResponse(msg)
+            self.view.toggleLoginButton("disabled")
+        except FTPError as exp:
+            self.view.updateServerResponse(str(exp))
+
+        self.view.updateServerResponse("\n")
+
+    def _displayDirectory(self) -> None:
+        """
+        display directory in directory list response text box.
+
+        paramters
+        ---------
+        event: Union[tk.EventType, None]
+            The event that triggered the function call.
+        """
+
+        fileList = self.model.displayDirectory()
+        self.view.updateDirectoryResponse(fileList)
 
     def run(self) -> None:
-        pass
+        """
+        Run the application.
+        """
+        self.view.buildGUI(self)
+        self.view.mainloop()

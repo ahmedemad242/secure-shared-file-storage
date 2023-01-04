@@ -1,17 +1,20 @@
 """
 Main module of the application.
 """
-from view import FtpClientGui  # pylint: disable=no-name-in-module,import-error
-from presenter import FtpClientPresenter  # pylint: disable=import-error
+
+from .view import FTPClientGui
+from .presenter import FTPClientPresenter
+from .model import FTPConnectionModel
 
 
 def main() -> None:
     """
     Main function of the application.
     """
-    presenter = FtpClientPresenter()
-    view = FtpClientGui(presenter)
-    view.mainloop()
+    view = FTPClientGui()
+    model = FTPConnectionModel()
+    presenter = FTPClientPresenter(model, view)
+    presenter.run()
 
 
 if __name__ == "__main__":

@@ -1,18 +1,18 @@
 """
 FTP Client GUI
 """
-# pylint: disable=C0116
 
 from typing import Protocol, Union, List, Dict
-
 import tkinter as tk
-import customtkinter as ctk  # pylint: disable=import-error
+import customtkinter as ctk
 
 
-class FtpClientPresenter(Protocol):
+class FTPClientPresenter(Protocol):
     """
     FTP Client Presenter protocol
     """
+
+    # pylint: disable=C0116
 
     def handleConnect(self, event: Union[tk.EventType, None] = None) -> None:
         ...
@@ -45,12 +45,12 @@ class FtpClientPresenter(Protocol):
         ...
 
 
-class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
+class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
     """
     FTP Client GUI
     """
 
-    def __init__(self, presenter: FtpClientPresenter) -> None:  # pylint: disable=R0915
+    def __init__(self) -> None:
         super().__init__()
         self.title("FTP Client")
         self.geometry(f"{1100}x{600}")
@@ -60,11 +60,10 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
         self.entryWidgets: Dict[str, ctk.CTkEntry] = {}
+        self.loginButton: ctk.CTkButton = None
         self.responseWidgets: Dict[str, ctk.CTkTextbox] = {}
 
-        self.buildGUI(presenter)
-
-    def buildGUI(self, presenter: FtpClientPresenter) -> None:
+    def buildGUI(self, presenter: FTPClientPresenter) -> None:
         """
         Build the GUI
         """
@@ -123,7 +122,7 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         directoryListTextbox.configure(state="disabled")
         self.responseWidgets["directoryListTextbox"] = directoryListTextbox
 
-    def buildConnectSection(self, presenter: FtpClientPresenter) -> None:
+    def buildConnectSection(self, presenter: FTPClientPresenter) -> None:
         """
         Build the connect section frame with widgets
         The connect section contain the connection details entry widgets
@@ -151,7 +150,7 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         connectButton = ctk.CTkButton(connectFrame, command=presenter.handleConnect, text="Connect")
         connectButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
 
-    def buildLoginSection(self, presenter: FtpClientPresenter) -> None:
+    def buildLoginSection(self, presenter: FTPClientPresenter) -> None:
         """
         Build the login section frame with widgets
         The login section contain the login details entry widgets
@@ -176,12 +175,11 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         passwordEntry.grid(row=2, column=2, padx=5, pady=10, sticky="n")
         self.entryWidgets["passwordEntry"] = passwordEntry
 
-        loginButton = ctk.CTkButton(loginFrame, command=presenter.handleLogin, text="Login")
-        loginButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+        self.loginButton = ctk.CTkButton(loginFrame, command=presenter.handleLogin, text="Login")
+        self.loginButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+        self.loginButton.configure(state="disabled")
 
-        loginButton.configure(state="disabled")
-
-    def buildControlSection(self, presenter: FtpClientPresenter) -> None:
+    def buildControlSection(self, presenter: FTPClientPresenter) -> None:
         """
         Build the control section frame with widgets
         The control section contain the main entry widget for
@@ -296,7 +294,7 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         return self.entryWidgets["usernameEntry"].get()  # type: ignore
 
     @property
-    def ipAddrpasswordess(self) -> str:
+    def password(self) -> str:
         """
         Get the input from the password entry widget
 
@@ -317,9 +315,9 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         response: str
             The response to update the textbox with
         """
-        self.serverResponseTextbox.configure(state="normal")
-        self.serverResponseTextbox.insert("end", response)
-        self.serverResponseTextbox.configure(state="disabled")
+        self.responseWidgets["serverResponseTextbox"].configure(state="normal")
+        self.responseWidgets["serverResponseTextbox"].insert("end", response)
+        self.responseWidgets["serverResponseTextbox"].configure(state="disabled")
 
     def updateDirectoryResponse(self, fileList: List[str]) -> None:
         """
@@ -331,8 +329,20 @@ class FtpClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0902
         fileList: List[str]
             The list of directories/files to update the textbox with
         """
-        self.directoryListTextbox.configure(state="normal")
-        self.directoryListTextbox.delete(1.0, "end")
+        self.responseWidgets["directoryListTextbox"].configure(state="normal")
+        self.responseWidgets["directoryListTextbox"].delete(1.0, "end")
         for file in fileList:
-            self.directoryListTextbox.insert(0, file)
-        self.directoryListTextbox.configure(state="disabled")
+            self.responseWidgets["directoryListTextbox"].insert("end", file)
+            self.responseWidgets["directoryListTextbox"].insert("end", "\n")
+        self.responseWidgets["directoryListTextbox"].configure(state="disabled")
+
+    def toggleLoginButton(self, state: str) -> None:
+        """
+        Toggle the login button state
+
+        parameters
+        ----------
+        state: str
+            The state to toggle the login button to
+        """
+        self.loginButton.configure(state=state)
