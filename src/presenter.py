@@ -219,8 +219,9 @@ class FTPClientPresenter:
         """
 
         try:
-            msg = self.model.deleteFile(self.view.mainInput)
-            self.view.updateServerResponse(msg)
+            self.model.deleteFile(self.view.mainInput + ".enc")
+            self.model.deleteFile(self.view.mainInput + ".key.enc")
+            self.view.updateServerResponse(f"Deleted file: {self.view.mainInput}")
             self._displayDirectory()
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
