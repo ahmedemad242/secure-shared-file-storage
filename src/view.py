@@ -3,6 +3,8 @@ FTP Client GUI
 """
 
 from typing import Protocol, Union, List, Dict
+
+import os
 import tkinter as tk
 import customtkinter as ctk
 
@@ -54,10 +56,8 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         super().__init__()
         self.title("FTP Client")
         self.geometry(f"{1100}x{600}")
-
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure((2, 3), weight=0)
-        self.grid_rowconfigure((0, 1, 2), weight=1)
+        icon = tk.PhotoImage(file=f"{os.path.realpath(os.path.dirname(__file__))}/../favicon.png")
+        self.tk.call("wm", "iconphoto", self._w, icon)
 
         self.entryWidgets: Dict[str, ctk.CTkEntry] = {}
         self.buttonWidgets: Dict[str, ctk.CTkEntry] = {}
@@ -67,6 +67,10 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         """
         Build the GUI
         """
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure((2, 3), weight=0)
+        self.grid_rowconfigure((0, 1, 2), weight=1)
+
         self.buildSidebar()
         self.buildResponseSection()
         self.buildControlSection(presenter)
@@ -197,7 +201,7 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         controlFrame.grid_columnconfigure((0, 1, 2), weight=1)
         controlFrame.grid_rowconfigure(6, weight=1)
 
-        mainEntry = ctk.CTkEntry(controlFrame, placeholder_text="Enter File/Directory name")
+        mainEntry = ctk.CTkEntry(controlFrame, placeholder_text="Enter File/Directory name or path")
         mainEntry.grid(row=0, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
         self.entryWidgets["mainEntry"] = mainEntry
 
