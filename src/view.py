@@ -199,19 +199,21 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         mainEntry.grid(row=0, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
         self.entryWidgets["mainEntry"] = mainEntry
 
-        keyEntry = ctk.CTkEntry(
+        rsaKeyEntry = ctk.CTkEntry(
             controlFrame, placeholder_text="Enter Public/Private key for Upload/Download"
         )
-        keyEntry.grid(row=1, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
-        self.entryWidgets["keyEntry"] = keyEntry
+        rsaKeyEntry.grid(row=1, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
+        self.entryWidgets["rsaKeyEntry"] = rsaKeyEntry
 
-        masterKeyEntry = ctk.CTkEntry(
+        encryptedKeyFilePath = ctk.CTkEntry(
             controlFrame,
             placeholder_text="Enter absolute or relative path to keys file, "
             + "leave empty if you're owner of file",
         )
-        masterKeyEntry.grid(row=2, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew")
-        self.entryWidgets["masterKeyEntry"] = masterKeyEntry
+        encryptedKeyFilePath.grid(
+            row=2, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew"
+        )
+        self.entryWidgets["encryptedKeyFilePath"] = encryptedKeyFilePath
 
         changeDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleChangeDirectory, text="Change Directory"
@@ -320,16 +322,28 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         return self.entryWidgets["passwordEntry"].get()  # type: ignore
 
     @property
-    def key(self) -> str:
+    def rsaKey(self) -> str:
         """
-        Get the input from the key entry widget
+        Get the input from the rsa key entry widget
 
         returns
         -------
         str
-            The key input
+            The rsa key input
         """
-        return self.entryWidgets["keyEntry"].get()  # type: ignore
+        return self.entryWidgets["rsaKeyEntry"].get()  # type: ignore
+
+    @property
+    def encryptedKeyFilePath(self) -> str:
+        """
+        Get the input from the decrypt key file path entry widget
+
+        returns
+        -------
+        str
+            The decrypt key file path input
+        """
+        return self.entryWidgets["encryptedKeyFilePath"].get()  # type: ignore
 
     def updateServerResponse(self, response: str) -> None:
         """
