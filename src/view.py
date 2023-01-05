@@ -96,7 +96,7 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         appearanceModeOptioneMenu = ctk.CTkOptionMenu(
             sideBarFrame,
             values=["Light", "Dark", "System"],
-            command=self.changeAppearanceModeEvent,
+            command=self._changeAppearanceModeEvent,
         )
         appearanceModeOptioneMenu.grid(row=6, column=0, padx=20, pady=(10, 30))
 
@@ -185,7 +185,7 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         self.buttonWidgets["loginButton"] = loginButton
         self.toggleLoginButton("disabled")
 
-    def buildControlSection(self, presenter: FTPClientPresenter) -> None:
+    def buildControlSection(self, presenter: FTPClientPresenter) -> None:  # pylint: disable=R0915
         """
         Build the control section frame with widgets
         The control section contain the main entry widget for
@@ -196,85 +196,126 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         presenter: FtpClientPresenter
             The presenter for the ftp client
         """
+
+        def buildEntrySection(parent: ctk.CTkFrame) -> None:
+            """
+            Build the entry section frame with widgets
+            The entry section contain the main entry widget for
+            file/directory name, and the contol buttons
+
+            parameters
+            ----------
+            parent: ctk.CTkFrame
+                The parent frame for the entry section
+            """
+
+            entryFrame = ctk.CTkFrame(parent, fg_color="transparent")
+            entryFrame.grid(row=0, column=0, columnspan=3, pady=(10, 10), sticky="nsew")
+            entryFrame.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+            entryFrame.grid_rowconfigure((0, 1, 2), weight=1)
+
+            mainEntry = ctk.CTkEntry(
+                entryFrame, placeholder_text="Enter File/Directory name or path"
+            )
+            mainEntry.grid(row=0, column=0, columnspan=5, padx=20, pady=(10, 0), sticky="nsew")
+            self.entryWidgets["mainEntry"] = mainEntry
+
+            mainEntrySelectFileButton = ctk.CTkButton(
+                entryFrame, command=self._chooseMainInputDirectory, text="Choose Directory"
+            )
+            mainEntrySelectFileButton.grid(row=0, column=5, pady=(10, 0), sticky="nsew")
+            self.buttonWidgets["mainEntrySelectFileButton"] = mainEntrySelectFileButton
+
+            rsaKeyEntry = ctk.CTkEntry(
+                entryFrame, placeholder_text="Enter Public/Private key for Upload/Download"
+            )
+            rsaKeyEntry.grid(row=1, column=0, columnspan=5, padx=20, pady=(10, 0), sticky="nsew")
+            self.entryWidgets["rsaKeyEntry"] = rsaKeyEntry
+
+            rsaKeyButton = ctk.CTkButton(
+                entryFrame, command=self._clearRsaKeyFileInput, text="Clear Entry"
+            )
+            rsaKeyButton.grid(row=1, column=5, pady=(10, 0), sticky="nsew")
+            self.buttonWidgets["rsaKeyButton"] = rsaKeyButton
+
+            encryptedKeyFilePathEntry = ctk.CTkEntry(
+                entryFrame,
+                placeholder_text="Enter absolute or relative path to keys file, "
+                + "leave empty if you're owner of file",
+            )
+            encryptedKeyFilePathEntry.grid(
+                row=2, column=0, columnspan=5, padx=20, pady=(10, 0), sticky="nsew"
+            )
+            self.entryWidgets["encryptedKeyFilePathEntry"] = encryptedKeyFilePathEntry
+
+            encryptedKeyFilePathButton = ctk.CTkButton(
+                entryFrame, command=self._chooseKeyFileInputDirectory, text="Choose Directory"
+            )
+            encryptedKeyFilePathButton.grid(row=2, column=5, pady=(10, 0), sticky="nsew")
+            self.buttonWidgets["encryptedKeyFilePathButton"] = encryptedKeyFilePathButton
+
+        def buildButtonsSection(parent: ctk.CTkFrame) -> None:
+            """
+            Build the buttons section frame with widgets
+            The buttons section contain the main control buttons
+            for file/directory operations
+
+            parameters
+            ----------
+            parent: ctk.CTkFrame
+                The parent frame for the buttons section
+            """
+            changeDirectoryButton = ctk.CTkButton(
+                parent, command=presenter.handleChangeDirectory, text="Change Directory"
+            )
+            changeDirectoryButton.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["changeDirectoryButton"] = changeDirectoryButton
+
+            createDirectoryButton = ctk.CTkButton(
+                parent, command=presenter.handleCreateDirectory, text="Create Directory"
+            )
+            createDirectoryButton.grid(row=1, column=1, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["createDirectoryButton"] = createDirectoryButton
+
+            deleteDirectoryButton = ctk.CTkButton(
+                parent, command=presenter.handleDeleteDirectory, text="Delete Directory"
+            )
+            deleteDirectoryButton.grid(row=1, column=2, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["deleteDirectoryButton"] = deleteDirectoryButton
+
+            downloadFileButton = ctk.CTkButton(
+                parent, command=presenter.handleDownloadFile, text="Download File"
+            )
+            downloadFileButton.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["downloadFileButton"] = downloadFileButton
+
+            uploadFileButton = ctk.CTkButton(
+                parent, command=presenter.handleUploadFile, text="Upload File"
+            )
+            uploadFileButton.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["uploadFileButton"] = uploadFileButton
+
+            deleteFileButton = ctk.CTkButton(
+                parent, command=presenter.handleDeleteFile, text="Delete File"
+            )
+            deleteFileButton.grid(row=2, column=2, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["deleteFileButton"] = deleteFileButton
+
+            disconnectButton = ctk.CTkButton(
+                parent, command=presenter.handleDisconnect, text="Disconnect"
+            )
+            disconnectButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
+            self.buttonWidgets["disconnectButton"] = disconnectButton
+
+            self.toggleControlButtons("disabled")
+
         controlFrame = ctk.CTkFrame(self, fg_color="transparent")
         controlFrame.grid(row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 20), sticky="nsew")
         controlFrame.grid_columnconfigure((0, 1, 2), weight=1)
-        controlFrame.grid_rowconfigure(6, weight=1)
+        controlFrame.grid_rowconfigure(4, weight=1)
 
-        mainEntry = ctk.CTkEntry(controlFrame, placeholder_text="Enter File/Directory name or path")
-        mainEntry.grid(row=0, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
-        self.entryWidgets["mainEntry"] = mainEntry
-
-        rsaKeyEntry = ctk.CTkEntry(
-            controlFrame, placeholder_text="Enter Public/Private key for Upload/Download"
-        )
-        rsaKeyEntry.grid(row=1, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
-        self.entryWidgets["rsaKeyEntry"] = rsaKeyEntry
-
-        encryptedKeyFilePath = ctk.CTkEntry(
-            controlFrame,
-            placeholder_text="Enter absolute or relative path to keys file, "
-            + "leave empty if you're owner of file",
-        )
-        encryptedKeyFilePath.grid(
-            row=2, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew"
-        )
-        self.entryWidgets["encryptedKeyFilePath"] = encryptedKeyFilePath
-
-        changeDirectoryButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleChangeDirectory, text="Change Directory"
-        )
-        changeDirectoryButton.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["changeDirectoryButton"] = changeDirectoryButton
-
-        createDirectoryButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleCreateDirectory, text="Create Directory"
-        )
-        createDirectoryButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["createDirectoryButton"] = createDirectoryButton
-
-        deleteDirectoryButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleDeleteDirectory, text="Delete Directory"
-        )
-        deleteDirectoryButton.grid(row=3, column=2, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["deleteDirectoryButton"] = deleteDirectoryButton
-
-        downloadFileButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleDownloadFile, text="Download File"
-        )
-        downloadFileButton.grid(row=4, column=0, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["downloadFileButton"] = downloadFileButton
-
-        uploadFileButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleUploadFile, text="Upload File"
-        )
-        uploadFileButton.grid(row=4, column=1, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["uploadFileButton"] = uploadFileButton
-
-        deleteFileButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleDeleteFile, text="Delete File"
-        )
-        deleteFileButton.grid(row=4, column=2, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["deleteFileButton"] = deleteFileButton
-
-        disconnectButton = ctk.CTkButton(
-            controlFrame, command=presenter.handleDisconnect, text="Disconnect"
-        )
-        disconnectButton.grid(row=5, column=1, padx=20, pady=10, sticky="nsew")
-        self.buttonWidgets["disconnectButton"] = disconnectButton
-
-        self.toggleControlButtons("disabled")
-
-    def changeAppearanceModeEvent(self, appearanceMode: str) -> None:
-        """
-        Change the appearance mode of the application
-
-        parameters
-        ----------
-        appearanceMode: str
-            The appearance mode to change to (Dark/Light/System)
-        """
-        ctk.set_appearance_mode(appearanceMode)
+        buildEntrySection(controlFrame)
+        buildButtonsSection(controlFrame)
 
     @property
     def mainInput(self) -> str:
@@ -358,7 +399,7 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         str
             The decrypt key file path input
         """
-        return self.entryWidgets["encryptedKeyFilePath"].get()  # type: ignore
+        return self.entryWidgets["encryptedKeyFilePathEntry"].get()  # type: ignore
 
     def updateServerResponse(self, response: str) -> None:
         """
@@ -419,9 +460,61 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         self.buttonWidgets["uploadFileButton"].configure(state=state)
         self.buttonWidgets["deleteFileButton"].configure(state=state)
         self.buttonWidgets["disconnectButton"].configure(state=state)
+        self.buttonWidgets["mainEntrySelectFileButton"].configure(state=state)
+        self.buttonWidgets["rsaKeyButton"].configure(state=state)
+        self.buttonWidgets["encryptedKeyFilePathButton"].configure(state=state)
 
     def scrollDownServerResponse(self) -> None:
         """
         Scroll the server response textbox down
         """
         self.responseWidgets["serverResponseTextbox"].see("end")
+
+    def _chooseMainInputDirectory(self) -> None:
+        """
+        Open a file dialog to choose a directory
+        """
+
+        filename = (
+            tk.filedialog.askopenfilename(  # type: ignore
+                initialdir=os.getcwd(),
+                title="Select a File to upload",
+                filetypes=(("Text files", "*.txt*"), ("all files", "*.*")),
+            ),
+        )
+
+        self.entryWidgets["mainEntry"].delete(0, "end")
+        self.entryWidgets["mainEntry"].insert(0, filename)
+
+    def _clearRsaKeyFileInput(self) -> None:
+        """
+        Clear the rsa key file input
+        """
+        self.entryWidgets["rsaKeyEntry"].delete(0, "end")
+
+    def _chooseKeyFileInputDirectory(self) -> None:
+        """
+        Open a file dialog to choose a directory
+        """
+
+        filename = (
+            tk.filedialog.askopenfilename(  # type: ignore
+                initialdir=os.getcwd(),
+                title="Select a File to upload",
+                filetypes=(("Text files", "*.txt*"), ("all files", "*.*")),
+            ),
+        )
+
+        self.entryWidgets["encryptedKeyFilePathEntry"].delete(0, "end")
+        self.entryWidgets["encryptedKeyFilePathEntry"].insert(0, filename)
+
+    def _changeAppearanceModeEvent(self, appearanceMode: str) -> None:
+        """
+        Change the appearance mode of the application
+
+        parameters
+        ----------
+        appearanceMode: str
+            The appearance mode to change to (Dark/Light/System)
+        """
+        ctk.set_appearance_mode(appearanceMode)
