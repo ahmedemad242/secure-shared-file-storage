@@ -4,8 +4,11 @@ FTP Client Presenter
 from __future__ import annotations
 from typing import Union, Protocol, List, Callable, Any
 from functools import wraps
+
 import tkinter as tk
+import platform
 import os
+import subprocess
 
 from src.file_handler.file_cryptographer import FileCryptographer
 from .model import FTPConnectionModel, UnableToConnect, NotAuthorized, FTPError
@@ -22,6 +25,23 @@ def _newServerResponseEntry(
         return result
 
     return wrapper
+
+
+def _openExplorer(filePath: str) -> None:
+    # pylint: disable=R1732
+    """
+    Open the file explorer to select a file.
+
+    paramters
+    ---------
+    filePath: str
+        The path to the file.
+    """
+
+    if platform.system() == "Windows":
+        subprocess.Popen(["explorer", "/select,", filePath])
+    else:
+        subprocess.Popen(["xdg-open", filePath])
 
 
 class FTPClientGui(Protocol):
@@ -220,8 +240,11 @@ class FTPClientPresenter:
             if self.view.encryptedKeyFilePath == "":
                 os.remove(encryptedKeyFilePath)
 
+            decryptedFilePath = f"{os.getcwd()}/{self.view.mainInput}.dec"
+            _openExplorer(decryptedFilePath)
+
             self.view.updateServerResponse("Downloaded and decrypted file: " + self.view.mainInput)
-            self._displayDirectory()
+
         except (FileNotFoundError, TypeError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
 
@@ -246,6 +269,8 @@ class FTPClientPresenter:
             self.view.updateServerResponse(f"Uploaded file: {self.view.mainInput}")
             os.remove(f"{self.view.mainInput}.enc")
             os.remove(f"{self.view.mainInput}.key.enc")
+
+            _openExplorer(os.getcwd())
             self._displayDirectory()
         except (FileNotFoundError, TypeError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
