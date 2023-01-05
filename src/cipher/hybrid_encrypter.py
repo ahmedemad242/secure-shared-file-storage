@@ -7,7 +7,18 @@ from Cryptodome.Random import get_random_bytes
 
 from .AES import AESCipher
 from .DES import DESCipher
+from .blowfish import BlowfishCipher
 from .abstract_cipher import Cipher
+
+
+def roundRobinCipher(ciphers: List[Cipher]) -> Generator[Cipher, None, None]:
+    """
+    Round robin cipher
+    """
+
+    while True:
+        for cipher in ciphers:
+            yield cipher
 
 
 class HybridEncrypter:
@@ -28,27 +39,21 @@ class HybridEncrypter:
         returns
         -------
         Tuple[bytes, bytes]
-            Encrypted data and keys used for encyption (AES key (16 bytes) + DES key (8 bytes))
+            Encrypted data and keys used for encyption (AES key (16 bytes)
+            + Blowfish key (16 bytes) + DES key (8 bytes))
         """
-
-        def roundRobinCipher(ciphers: List[Cipher]) -> Generator[Cipher, None, None]:
-            """
-            Round robin cipher
-            """
-
-            while True:
-                for cipher in ciphers:
-                    yield cipher
 
         chunckSize = 16
 
         keyAes = get_random_bytes(16)
+        keyBlowfish = get_random_bytes(16)
         keyDes = get_random_bytes(8)
 
         aes = AESCipher(keyAes)
         des = DESCipher(keyDes)
+        blowfish = BlowfishCipher(keyBlowfish)
 
-        cipherGenetator = roundRobinCipher([aes, des, des])
+        cipherGenetator = roundRobinCipher([aes, des, des, blowfish, blowfish])
 
         if len(raw) % chunckSize != 0:
             raw += b" " * (chunckSize - len(raw) % chunckSize)
@@ -67,7 +72,7 @@ class HybridEncrypter:
 
             encryptedData += next(cipherGenetator).encrypt(chunk)
 
-        return (encryptedData, keyAes + keyDes)
+        return (encryptedData, keyAes + keyBlowfish + keyDes)
 
     @staticmethod
     def decrypt(encryptedData: bytes, keys: bytes) -> bytes:
@@ -79,7 +84,8 @@ class HybridEncrypter:
         enc: bytes
             Encrypted data
         keys: bytes
-            Keys used for encryption (AES key (16 bytes) + DES key (8 bytes))
+            Keys used for encryption (AES key (16 bytes)
+            + Blowfish key (16 bytes) + DES key (8 bytes))
 
         returns
         -------
@@ -87,24 +93,21 @@ class HybridEncrypter:
             Decrypted data
         """
 
-        def roundRobinCipher(ciphers: List[Cipher]) -> Generator[Cipher, None, None]:
-            """
-            Round robin cipher
-            """
-
-            while True:
-                for cipher in ciphers:
-                    yield cipher
-
         chunckSize = 16
 
+        print(keys)
         keyAes = keys[:16]
-        keyDes = keys[16:]
+        keyBlowfish = keys[16:32]
+        keyDes = keys[32:]
 
         aes = AESCipher(keyAes)
         des = DESCipher(keyDes)
+        blowfish = BlowfishCipher(keyBlowfish)
 
-        cipherGenetator = roundRobinCipher([aes, des, des])
+        cipherGenetator = roundRobinCipher([aes, des, des, blowfish, blowfish])
+
+        if len(encryptedData) % chunckSize != 0:
+            encryptedData += b" " * (chunckSize - len(encryptedData) % chunckSize)
 
         currChunck = 0
         decryptedData = b""
@@ -118,6 +121,7 @@ class HybridEncrypter:
                 chunk += b" " * (chunckSize - len(chunk))
 
             decryptedData += next(cipherGenetator).decrypt(chunk)
+            # remove padding
             decryptedData = decryptedData.rstrip()
 
         return decryptedData

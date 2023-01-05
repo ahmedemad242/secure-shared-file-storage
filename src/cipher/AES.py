@@ -16,6 +16,19 @@ class AESCipher(Cipher):
         self.key = key
         self.cipher = AES.new(self.key, AES.MODE_ECB)
 
+    def setKey(self, key: bytes) -> None:
+        """
+        Set key
+
+        paramaters
+        ----------
+        key: bytes
+            Key
+        """
+
+        self.key = key
+        self.cipher = AES.new(self.key, AES.MODE_ECB)
+
     def encrypt(self, raw: bytes) -> bytes:
         """
         Encrypt raw data using AES

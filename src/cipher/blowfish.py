@@ -1,20 +1,20 @@
 """
-DES cipher module
+Blowfish cipher
 """
 
-from Cryptodome.Cipher import DES
+from Cryptodome.Cipher import Blowfish
 
 from .abstract_cipher import Cipher
 
 
-class DESCipher(Cipher):
+class BlowfishCipher(Cipher):
     """
-    DES cipher class
+    Blowfish cipher class
     """
 
     def __init__(self, key: bytes) -> None:
         self.key = key
-        self.cipher = DES.new(self.key, DES.MODE_ECB)
+        self.cipher = Blowfish.new(self.key, Blowfish.MODE_ECB)
 
     def setKey(self, key: bytes) -> None:
         """
@@ -27,11 +27,11 @@ class DESCipher(Cipher):
         """
 
         self.key = key
-        self.cipher = DES.new(self.key, DES.MODE_ECB)
+        self.cipher = Blowfish.new(self.key, Blowfish.MODE_ECB)
 
     def encrypt(self, raw: bytes) -> bytes:
         """
-        Encrypt raw data using DES
+        Encrypt raw data using Blowfish
 
         paramaters
         ----------
