@@ -257,6 +257,7 @@ class FTPClientPresenter:
         """
 
         fileList = self.model.displayDirectory()
+        fileList = [fileName.replace(".enc", "") for fileName in fileList if ".key" not in fileName]
         self.view.updateDirectoryResponse(fileList)
 
     def run(self) -> None:
