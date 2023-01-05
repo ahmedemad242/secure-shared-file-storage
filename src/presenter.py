@@ -71,6 +71,9 @@ class FTPClientGui(Protocol):
     def toggleLoginButton(self, state: str) -> None:
         ...
 
+    def toggleControlButtons(self, state: str) -> None:
+        ...
+
     def scrollDownServerResponse(self) -> None:
         ...
 
@@ -128,6 +131,7 @@ class FTPClientPresenter:
                 self.view.password,
             )
             self.view.updateServerResponse(msg)
+            self.view.toggleControlButtons("normal")
             self._displayDirectory()
         except NotAuthorized as exp:
             self.view.updateServerResponse(str(exp))
@@ -280,6 +284,7 @@ class FTPClientPresenter:
             msg = self.model.disconnect()
             self.view.updateServerResponse(msg)
             self.view.toggleLoginButton("disabled")
+            self.view.toggleControlButtons("disabled")
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
 

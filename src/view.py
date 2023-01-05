@@ -60,7 +60,7 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
         self.entryWidgets: Dict[str, ctk.CTkEntry] = {}
-        self.loginButton: ctk.CTkButton = None
+        self.buttonWidgets: Dict[str, ctk.CTkEntry] = {}
         self.responseWidgets: Dict[str, ctk.CTkTextbox] = {}
 
     def buildGUI(self, presenter: FTPClientPresenter) -> None:
@@ -149,6 +149,7 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
 
         connectButton = ctk.CTkButton(connectFrame, command=presenter.handleConnect, text="Connect")
         connectButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+        self.buttonWidgets["connectButton"] = connectButton
 
     def buildLoginSection(self, presenter: FTPClientPresenter) -> None:
         """
@@ -175,9 +176,10 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         passwordEntry.grid(row=2, column=2, padx=5, pady=10, sticky="n")
         self.entryWidgets["passwordEntry"] = passwordEntry
 
-        self.loginButton = ctk.CTkButton(loginFrame, command=presenter.handleLogin, text="Login")
-        self.loginButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
-        self.loginButton.configure(state="disabled")
+        loginButton = ctk.CTkButton(loginFrame, command=presenter.handleLogin, text="Login")
+        loginButton.grid(row=3, column=2, padx=5, pady=10, sticky="n")
+        self.buttonWidgets["loginButton"] = loginButton
+        self.toggleLoginButton("disabled")
 
     def buildControlSection(self, presenter: FTPClientPresenter) -> None:
         """
@@ -219,36 +221,45 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
             controlFrame, command=presenter.handleChangeDirectory, text="Change Directory"
         )
         changeDirectoryButton.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["changeDirectoryButton"] = changeDirectoryButton
 
         createDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleCreateDirectory, text="Create Directory"
         )
         createDirectoryButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["createDirectoryButton"] = createDirectoryButton
 
         deleteDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDeleteDirectory, text="Delete Directory"
         )
         deleteDirectoryButton.grid(row=3, column=2, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["deleteDirectoryButton"] = deleteDirectoryButton
 
         downloadFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDownloadFile, text="Download File"
         )
         downloadFileButton.grid(row=4, column=0, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["downloadFileButton"] = downloadFileButton
 
         uploadFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleUploadFile, text="Upload File"
         )
         uploadFileButton.grid(row=4, column=1, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["uploadFileButton"] = uploadFileButton
 
         deleteFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDeleteFile, text="Delete File"
         )
         deleteFileButton.grid(row=4, column=2, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["deleteFileButton"] = deleteFileButton
 
         disconnectButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDisconnect, text="Disconnect"
         )
         disconnectButton.grid(row=5, column=1, padx=20, pady=10, sticky="nsew")
+        self.buttonWidgets["disconnectButton"] = disconnectButton
+
+        self.toggleControlButtons("disabled")
 
     def changeAppearanceModeEvent(self, appearanceMode: str) -> None:
         """
@@ -385,7 +396,25 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         state: str
             The state to toggle the login button to
         """
-        self.loginButton.configure(state=state)
+        self.buttonWidgets["loginButton"].configure(state=state)
+
+    def toggleControlButtons(self, state: str) -> None:
+        """
+        Toggle the login button state
+
+        parameters
+        ----------
+        state: str
+            The state to toggle the login button to
+        """
+
+        self.buttonWidgets["changeDirectoryButton"].configure(state=state)
+        self.buttonWidgets["createDirectoryButton"].configure(state=state)
+        self.buttonWidgets["deleteDirectoryButton"].configure(state=state)
+        self.buttonWidgets["downloadFileButton"].configure(state=state)
+        self.buttonWidgets["uploadFileButton"].configure(state=state)
+        self.buttonWidgets["deleteFileButton"].configure(state=state)
+        self.buttonWidgets["disconnectButton"].configure(state=state)
 
     def scrollDownServerResponse(self) -> None:
         """
