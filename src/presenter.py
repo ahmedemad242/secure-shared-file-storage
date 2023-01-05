@@ -270,7 +270,6 @@ class FTPClientPresenter:
             os.remove(f"{self.view.mainInput}.enc")
             os.remove(f"{self.view.mainInput}.key.enc")
 
-            _openExplorer(os.getcwd())
             self._displayDirectory()
         except (FileNotFoundError, TypeError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
