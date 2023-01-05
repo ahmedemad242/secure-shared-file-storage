@@ -2,7 +2,7 @@
 DES cipher module
 """
 
-from Cryptodome.Cipher import DES  # pylint: disable=import-error
+from Cryptodome.Cipher import DES
 
 from .abstract_cipher import Cipher
 
@@ -14,7 +14,7 @@ class DESCipher(Cipher):
 
     def __init__(self, key: bytes) -> None:
         self.key = key
-        self.cipher = DES.new(self.key, DES.MODE_ECB)
+        self.cipher = DES.new(self.key, DES.MODE_OFB)
 
     def setKey(self, key: bytes) -> None:
         """
@@ -44,7 +44,7 @@ class DESCipher(Cipher):
             Encrypted data
         """
 
-        return self.cipher.encrypt(raw)  # type: ignore
+        return self.cipher.encrypt(raw)
 
     def decrypt(self, enc: bytes) -> bytes:
         """
@@ -61,4 +61,4 @@ class DESCipher(Cipher):
             Decrypted data
         """
 
-        return self.cipher.decrypt(enc)  # type: ignore
+        return self.cipher.decrypt(enc)

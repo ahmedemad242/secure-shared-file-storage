@@ -2,7 +2,7 @@
 AES cipher module
 """
 
-from Cryptodome.Cipher import AES  # pylint: disable=import-error
+from Cryptodome.Cipher import AES
 
 from .abstract_cipher import Cipher
 
@@ -31,7 +31,7 @@ class AESCipher(Cipher):
             Encrypted data
         """
 
-        return self.cipher.encrypt(raw)  # type: ignore
+        return self.cipher.encrypt(raw)
 
     def decrypt(self, enc: bytes) -> bytes:
         """
@@ -48,4 +48,4 @@ class AESCipher(Cipher):
             Decrypted data
         """
 
-        return self.cipher.decrypt(enc)  # type: ignore
+        return self.cipher.decrypt(enc)
