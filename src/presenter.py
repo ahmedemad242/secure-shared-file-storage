@@ -4,7 +4,9 @@ FTP Client Presenter
 from __future__ import annotations
 from typing import Union, Protocol, List
 import tkinter as tk
+import os
 
+from src.file_handler.file_cryptographer import FileCryptographer
 from .model import FTPConnectionModel, UnableToConnect, NotAuthorized, FTPError
 
 
@@ -36,6 +38,10 @@ class FTPClientGui(Protocol):
 
     @property
     def password(self) -> str:
+        ...
+
+    @property
+    def key(self) -> str:
         ...
 
     def updateServerResponse(self, response: str) -> None:
@@ -190,10 +196,14 @@ class FTPClientPresenter:
         """
 
         try:
-            msg = self.model.uploadFile(self.view.mainInput)
-            self.view.updateServerResponse(msg)
+            FileCryptographer.encryptFile(self.view.mainInput, bytes(self.view.key, "utf-8"))
+            self.model.uploadFile(f"{self.view.mainInput}.enc")
+            self.model.uploadFile(f"{self.view.mainInput}.key.enc")
+            self.view.updateServerResponse(f"Uploaded file: {self.view.mainInput}")
+            os.remove(f"{self.view.mainInput}.enc")
+            os.remove(f"{self.view.mainInput}.key.enc")
             self._displayDirectory()
-        except FTPError as exp:
+        except (FileNotFoundError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
 
         self.view.updateServerResponse("\n")

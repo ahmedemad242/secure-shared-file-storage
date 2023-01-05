@@ -193,46 +193,52 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
         controlFrame = ctk.CTkFrame(self, fg_color="transparent")
         controlFrame.grid(row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
         controlFrame.grid_columnconfigure((0, 1, 2), weight=1)
-        controlFrame.grid_rowconfigure(4, weight=1)
+        controlFrame.grid_rowconfigure(5, weight=1)
 
         mainEntry = ctk.CTkEntry(controlFrame, placeholder_text="Enter File/Directory name")
-        mainEntry.grid(row=0, column=0, columnspan=3, padx=(20, 0), pady=(20, 20), sticky="nsew")
+        mainEntry.grid(row=0, column=0, columnspan=3, padx=20, pady=10, sticky="nsew")
         self.entryWidgets["mainEntry"] = mainEntry
+
+        keyEntry = ctk.CTkEntry(
+            controlFrame, placeholder_text="Enter Public/Private key for Upload/Download"
+        )
+        keyEntry.grid(row=1, column=0, columnspan=3, padx=20, pady=(20, 20), sticky="nsew")
+        self.entryWidgets["keyEntry"] = keyEntry
 
         changeDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleChangeDirectory, text="Change Directory"
         )
-        changeDirectoryButton.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
+        changeDirectoryButton.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
 
         createDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleCreateDirectory, text="Create Directory"
         )
-        createDirectoryButton.grid(row=1, column=1, padx=20, pady=10, sticky="nsew")
+        createDirectoryButton.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
 
         deleteDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDeleteDirectory, text="Delete Directory"
         )
-        deleteDirectoryButton.grid(row=1, column=2, padx=20, pady=10, sticky="nsew")
+        deleteDirectoryButton.grid(row=2, column=2, padx=20, pady=10, sticky="nsew")
 
         downloadFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDownloadFile, text="Download File"
         )
-        downloadFileButton.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
+        downloadFileButton.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
 
         uploadFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleUploadFile, text="Upload File"
         )
-        uploadFileButton.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
+        uploadFileButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
 
         deleteFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDeleteFile, text="Delete File"
         )
-        deleteFileButton.grid(row=2, column=2, padx=20, pady=10, sticky="nsew")
+        deleteFileButton.grid(row=3, column=2, padx=20, pady=10, sticky="nsew")
 
         disconnectButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDisconnect, text="Disconnect"
         )
-        disconnectButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
+        disconnectButton.grid(row=4, column=1, padx=20, pady=10, sticky="nsew")
 
     def changeAppearanceModeEvent(self, appearanceMode: str) -> None:
         """
@@ -304,6 +310,18 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
             The password input
         """
         return self.entryWidgets["passwordEntry"].get()  # type: ignore
+
+    @property
+    def key(self) -> str:
+        """
+        Get the input from the key entry widget
+
+        returns
+        -------
+        str
+            The key input
+        """
+        return self.entryWidgets["keyEntry"].get()  # type: ignore
 
     def updateServerResponse(self, response: str) -> None:
         """
