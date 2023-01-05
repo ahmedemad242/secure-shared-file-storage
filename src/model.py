@@ -204,8 +204,8 @@ class FTPConnectionModel:
 
         try:
             with open(fileName, "rb") as uploadFile:
-                return f"Uploading {fileName}...\n" + self.ftp.storbinary(
-                    "STOR " + fileName, uploadFile
+                return f"Uploading {fileName.split('/')[-1]}...\n" + self.ftp.storbinary(
+                    "STOR " + fileName.split("/")[-1], uploadFile
                 )
         except ftplib.error_perm as exp:
             raise FTPError(exp) from exp
