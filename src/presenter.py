@@ -12,8 +12,8 @@ from .model import FTPConnectionModel, UnableToConnect, NotAuthorized, FTPError
 
 
 def _newServerResponseEntry(
-    func: Callable[[FTPClientPresenter, Union[tk.EventType, None]], None],
-) -> Callable[[FTPClientPresenter, Union[tk.EventType, None]], None]:
+    func: Callable[[FTPClientPresenter, Any], Any],
+) -> Callable[[FTPClientPresenter, Any], Any]:
     @wraps(func)
     def wrapper(self: FTPClientPresenter, *args: Any, **kwargs: Any) -> Any:
         result = func(self, *args, **kwargs)
@@ -55,7 +55,11 @@ class FTPClientGui(Protocol):
         ...
 
     @property
-    def key(self) -> str:
+    def rsaKey(self) -> str:
+        ...
+
+    @property
+    def encryptedKeyFilePath(self) -> str:
         ...
 
     def updateServerResponse(self, response: str) -> None:
@@ -185,17 +189,36 @@ class FTPClientPresenter:
         """
         Handle the download file button being pressed.
 
+        Here we save the files to disk then remove them, the reason behind this is that
+        the ftplib requires a file to be saved to disk.
+
         paramters
         ---------
         event: Union[tk.EventType, None]
             The event that triggered the function call.
         """
+        rsaKey = self.view.rsaKey
+        encryptedKeyFilePath = self.view.mainInput + ".key.enc"
+        encryptedFilePath = self.view.mainInput + ".enc"
 
         try:
-            msg = self.model.downloadFile(self.view.mainInput)
-            self.view.updateServerResponse(msg)
+            self.model.downloadFile(encryptedFilePath)
+            if self.view.encryptedKeyFilePath == "":
+                self.model.downloadFile(encryptedKeyFilePath)
+            else:
+                encryptedKeyFilePath = self.view.encryptedKeyFilePath
+
+            FileCryptographer.decryptFile(
+                encryptedFilePath, encryptedKeyFilePath, bytes(rsaKey, "utf-8")
+            )
+
+            os.remove(encryptedFilePath)
+            if self.view.encryptedKeyFilePath == "":
+                os.remove(encryptedKeyFilePath)
+
+            self.view.updateServerResponse("Downloaded and decrypted file: " + self.view.mainInput)
             self._displayDirectory()
-        except FTPError as exp:
+        except (FileNotFoundError, TypeError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
 
     @_newServerResponseEntry
@@ -203,6 +226,9 @@ class FTPClientPresenter:
         """
         Handle the upload file button being pressed.
 
+        Here we encrypt the file and then upload it to the server. The reason we save the encrypted
+        to disk and then remove it is because the way the ftplib works.
+
         paramters
         ---------
         event: Union[tk.EventType, None]
@@ -210,14 +236,14 @@ class FTPClientPresenter:
         """
 
         try:
-            FileCryptographer.encryptFile(self.view.mainInput, bytes(self.view.key, "utf-8"))
+            FileCryptographer.encryptFile(self.view.mainInput, bytes(self.view.rsaKey, "utf-8"))
             self.model.uploadFile(f"{self.view.mainInput}.enc")
             self.model.uploadFile(f"{self.view.mainInput}.key.enc")
             self.view.updateServerResponse(f"Uploaded file: {self.view.mainInput}")
             os.remove(f"{self.view.mainInput}.enc")
             os.remove(f"{self.view.mainInput}.key.enc")
             self._displayDirectory()
-        except (FileNotFoundError, ValueError, FTPError) as exp:
+        except (FileNotFoundError, TypeError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
 
     @_newServerResponseEntry

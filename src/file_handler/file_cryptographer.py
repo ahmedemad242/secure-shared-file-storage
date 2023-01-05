@@ -45,7 +45,7 @@ class FileCryptographer:
             raise FileNotFoundError("File not found") from exp
 
     @staticmethod
-    def decryptFile(fileName: str, privateKey: bytes) -> None:
+    def decryptFile(fileName: str, encryptedKeysFilePath: str, privateKey: bytes) -> None:
         """
         Decrypts a file using a key.
 
@@ -58,10 +58,10 @@ class FileCryptographer:
         """
 
         try:
-            with open(fileName + ".enc", "rb") as file:
+            with open(fileName, "rb") as file:
                 encrypted = file.read()
 
-            with open(fileName + ".key.enc", "rb") as file:
+            with open(encryptedKeysFilePath, "rb") as file:
                 encryptedKeys = file.read()
 
             rsaCipher = RSACipher(privateKey)
@@ -69,7 +69,7 @@ class FileCryptographer:
 
             decrypted = HybridEncrypter.decrypt(encrypted, keys)
 
-            with open(fileName + ".dec", "wb") as file:
+            with open(fileName.replace(".enc", "") + ".dec", "wb") as file:
                 file.write(decrypted)
 
         except FileNotFoundError as exp:
