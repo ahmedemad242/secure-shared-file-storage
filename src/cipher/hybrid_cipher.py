@@ -1,5 +1,13 @@
 """
 Hybrid encrypter class
+The following methodology is followed for encryption:
+    1.  Dividing the file to upload into N parts. each one is 16 bytes long.
+    2.  Generate 3 keys randomly, for AES, Blowfish and DES
+    3.  Encrypting all the parts of the file using the three algorithms in round robin fashion.
+        And the parts are put together in a single file as ordered.
+    4.  The keys for cryptography algorithms are then grouped in a key file
+
+The decryption follows the same methodology is reverse order
 """
 
 from typing import Tuple, List, Generator
@@ -14,6 +22,16 @@ from .abstract_cipher import Cipher
 def roundRobinCipher(ciphers: List[Cipher]) -> Generator[Cipher, None, None]:
     """
     Round robin cipher
+
+    paramaters
+    ----------
+    ciphers: List[Cipher]
+        List of ciphers
+
+    returns
+    -------
+    Generator[Cipher, None, None]
+        Generator of ciphers which yields a cipher in round robin fashion
     """
 
     while True:
@@ -95,7 +113,6 @@ class HybridEncrypter:
 
         chunckSize = 16
 
-        print(keys)
         keyAes = keys[:16]
         keyBlowfish = keys[16:32]
         keyDes = keys[32:]
