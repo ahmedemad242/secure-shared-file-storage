@@ -87,6 +87,8 @@ class FTPClientPresenter:
 
         except UnableToConnect as exp:
             self.view.updateServerResponse(str(exp))
+        except ValueError:
+            self.view.updateServerResponse("Port number must be an integer")
 
         self.view.updateServerResponse("\n")
 
