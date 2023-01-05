@@ -191,54 +191,62 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
             The presenter for the ftp client
         """
         controlFrame = ctk.CTkFrame(self, fg_color="transparent")
-        controlFrame.grid(row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        controlFrame.grid(row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 20), sticky="nsew")
         controlFrame.grid_columnconfigure((0, 1, 2), weight=1)
-        controlFrame.grid_rowconfigure(5, weight=1)
+        controlFrame.grid_rowconfigure(6, weight=1)
 
         mainEntry = ctk.CTkEntry(controlFrame, placeholder_text="Enter File/Directory name")
-        mainEntry.grid(row=0, column=0, columnspan=3, padx=20, pady=10, sticky="nsew")
+        mainEntry.grid(row=0, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
         self.entryWidgets["mainEntry"] = mainEntry
 
         keyEntry = ctk.CTkEntry(
             controlFrame, placeholder_text="Enter Public/Private key for Upload/Download"
         )
-        keyEntry.grid(row=1, column=0, columnspan=3, padx=20, pady=(20, 20), sticky="nsew")
+        keyEntry.grid(row=1, column=0, columnspan=3, padx=20, pady=(10, 0), sticky="nsew")
         self.entryWidgets["keyEntry"] = keyEntry
+
+        masterKeyEntry = ctk.CTkEntry(
+            controlFrame,
+            placeholder_text="Enter absolute or relative path to keys file, "
+            + "leave empty if you're owner of file",
+        )
+        masterKeyEntry.grid(row=2, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew")
+        self.entryWidgets["masterKeyEntry"] = masterKeyEntry
 
         changeDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleChangeDirectory, text="Change Directory"
         )
-        changeDirectoryButton.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
+        changeDirectoryButton.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
 
         createDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleCreateDirectory, text="Create Directory"
         )
-        createDirectoryButton.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
+        createDirectoryButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
 
         deleteDirectoryButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDeleteDirectory, text="Delete Directory"
         )
-        deleteDirectoryButton.grid(row=2, column=2, padx=20, pady=10, sticky="nsew")
+        deleteDirectoryButton.grid(row=3, column=2, padx=20, pady=10, sticky="nsew")
 
         downloadFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDownloadFile, text="Download File"
         )
-        downloadFileButton.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
+        downloadFileButton.grid(row=4, column=0, padx=20, pady=10, sticky="nsew")
 
         uploadFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleUploadFile, text="Upload File"
         )
-        uploadFileButton.grid(row=3, column=1, padx=20, pady=10, sticky="nsew")
+        uploadFileButton.grid(row=4, column=1, padx=20, pady=10, sticky="nsew")
 
         deleteFileButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDeleteFile, text="Delete File"
         )
-        deleteFileButton.grid(row=3, column=2, padx=20, pady=10, sticky="nsew")
+        deleteFileButton.grid(row=4, column=2, padx=20, pady=10, sticky="nsew")
 
         disconnectButton = ctk.CTkButton(
             controlFrame, command=presenter.handleDisconnect, text="Disconnect"
         )
-        disconnectButton.grid(row=4, column=1, padx=20, pady=10, sticky="nsew")
+        disconnectButton.grid(row=5, column=1, padx=20, pady=10, sticky="nsew")
 
     def changeAppearanceModeEvent(self, appearanceMode: str) -> None:
         """
