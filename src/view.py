@@ -364,3 +364,9 @@ class FTPClientGui(ctk.CTk):  # type: ignore # pylint: disable=R0901
             The state to toggle the login button to
         """
         self.loginButton.configure(state=state)
+
+    def scrollDownServerResponse(self) -> None:
+        """
+        Scroll the server response textbox down
+        """
+        self.responseWidgets["serverResponseTextbox"].see("end")

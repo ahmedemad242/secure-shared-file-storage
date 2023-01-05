@@ -2,12 +2,26 @@
 FTP Client Presenter
 """
 from __future__ import annotations
-from typing import Union, Protocol, List
+from typing import Union, Protocol, List, Callable, Any
+from functools import wraps
 import tkinter as tk
 import os
 
 from src.file_handler.file_cryptographer import FileCryptographer
 from .model import FTPConnectionModel, UnableToConnect, NotAuthorized, FTPError
+
+
+def _newServerResponseEntry(
+    func: Callable[[FTPClientPresenter, Union[tk.EventType, None]], None],
+) -> Callable[[FTPClientPresenter, Union[tk.EventType, None]], None]:
+    @wraps(func)
+    def wrapper(self: FTPClientPresenter, *args: Any, **kwargs: Any) -> Any:
+        result = func(self, *args, **kwargs)
+        self.view.scrollDownServerResponse()
+        self.view.updateServerResponse("\n")
+        return result
+
+    return wrapper
 
 
 class FTPClientGui(Protocol):
@@ -53,6 +67,9 @@ class FTPClientGui(Protocol):
     def toggleLoginButton(self, state: str) -> None:
         ...
 
+    def scrollDownServerResponse(self) -> None:
+        ...
+
     def mainloop(self) -> None:
         ...
 
@@ -68,6 +85,7 @@ class FTPClientPresenter:
         self.model = model
         self.view = view
 
+    @_newServerResponseEntry
     def handleConnect(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the connect button being pressed.
@@ -90,8 +108,7 @@ class FTPClientPresenter:
         except ValueError:
             self.view.updateServerResponse("Port number must be an integer")
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleLogin(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the login button being pressed.
@@ -111,8 +128,7 @@ class FTPClientPresenter:
         except NotAuthorized as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleChangeDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the change directory button being pressed.
@@ -129,8 +145,7 @@ class FTPClientPresenter:
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleCreateDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the create directory button being pressed.
@@ -147,8 +162,7 @@ class FTPClientPresenter:
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleDeleteDirectory(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the delete directory button being pressed.
@@ -166,8 +180,7 @@ class FTPClientPresenter:
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleDownloadFile(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the download file button being pressed.
@@ -185,8 +198,7 @@ class FTPClientPresenter:
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleUploadFile(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the upload file button being pressed.
@@ -208,8 +220,7 @@ class FTPClientPresenter:
         except (FileNotFoundError, ValueError, FTPError) as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleDeleteFile(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the delete file button being pressed.
@@ -228,8 +239,7 @@ class FTPClientPresenter:
         except FTPError as exp:
             self.view.updateServerResponse(str(exp))
 
-        self.view.updateServerResponse("\n")
-
+    @_newServerResponseEntry
     def handleDisconnect(self, event: Union[tk.EventType, None] = None) -> None:
         """
         Handle the disconnect button being pressed.
